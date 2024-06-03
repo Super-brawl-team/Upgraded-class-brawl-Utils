@@ -5,6 +5,6 @@ The code is mostly from BSDS a good brawl stars open source private server, i ju
 
 Every single parts of the code is originally took from the game's lib
 
-I really recommend to use this
+# I really recommend to use this
 
 I havent test everything but it shall work
