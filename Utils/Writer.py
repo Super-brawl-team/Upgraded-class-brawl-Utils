@@ -4,6 +4,8 @@ from Utils.Debugger import Debugger
 from Utils.ByteStreamHelper import ByteStreamHelper
 from Utils.ChecksumEncoder import ChecksumEncoder
 from Utils.LogicStringUtil import LogicStringUtil
+import zlib
+from Utils.Helpers import Helpers
 
 class Writer:
     
@@ -339,9 +341,31 @@ class Writer:
     def encodeLogicLongList(self, logicLongList):
         ByteStreamHelper.encodeLogicLongList(self, logicLongList)
      
-    def Send(self):
+    def send(self):
         self.encode()
+        packet = self.buffer
+        self.buffer = self.id.to_bytes(2, 'big', signed=True)
+        self.writeInt(len(packet), 3)
         if hasattr(self, 'version'):
-            self.device.SendData(self.id, self.buffer, self.version)
+            self.writeInt16(self.version)
         else:
-            self.device.SendData(self.id, self.buffer)
+            self.writeInt16(0)
+        self.buffer += packet + b'\xff\xff\x00\x00\x00\x00\x00'
+        self.client.send(self.buffer)
+        print(f'[SERVER] PacketID: {self.id}, Name: {type(self).__name__}, Length: {len(self.buffer)}')
+
+
+    def sendByID(self, ID):
+        try:
+            self.encode()
+            packet = self.buffer
+            self.buffer = self.id.to_bytes(2, 'big', signed=True)
+            self.writeInt(len(packet), 3)
+            if hasattr(self, 'version'):
+                self.writeInt16(self.version)
+            else:
+                self.writeInt16(0)
+            self.buffer += packet + b'\xff\xff\x00\x00\x00\x00\x00'
+            Helpers.connected_clients["Clients"][str(ID)]["SocketInfo"].send(self.buffer)
+        except:
+            pass
